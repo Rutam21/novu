@@ -76,6 +76,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (exception instanceof ZodError) {
       return handleZod(exception);
     }
+    if (this.isMongoError(exception)) {
+      return handleMongo(exception);
+    }
+    if (exception instanceof ZodError) {
+      return handleZod(exception);
+    }
     if (exception instanceof CommandValidationException) {
       return handleCommandValidation(exception);
     }
@@ -93,6 +99,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
     };
   }
 
+  private isMongoError(exception: unknown): exception is MongoServerError {
+    return (
+      typeof exception === 'object' &&
+      exception !== null &&
+      'type' in exception &&
+      (exception as { type: string }).type === 'MongoServerError'
+    );
+  }
   private getUuid(exception: unknown) {
     if (process.env.SENTRY_DSN) {
       try {
@@ -122,7 +136,7 @@ export class ErrorDto {
   message: string | object;
 }
 
-function handleZod(exception: ZodError<any>) {
+function handleZod(exception: ZodError) {
   const status = HttpStatus.BAD_REQUEST; // Set appropriate status for ZodError
   const message = {
     errors: exception.errors.map((err) => ({
@@ -133,10 +147,34 @@ function handleZod(exception: ZodError<any>) {
 
   return { status, message };
 }
+function handleMongo(exception: MongoServerError) {
+  const status = HttpStatus.INTERNAL_SERVER_ERROR; // Set appropriate status for ZodError
+
+  let msg = `MongoDB Error: Code: ${exception.code}, Message: ${exception.errmsg}`;
+  if (exception.writeErrors) {
+    msg += `, Write Errors: ${exception.writeErrors.map((err) => `Index: ${err.index}, Message: ${err.errmsg}`).join('; ')}`;
+  }
+  msg += `, Operation Time: ${exception.operationTime || 'N/A'}, Cluster Time: ${exception.clusterTime || 'N/A'}`;
+
+  return { status, message: msg };
+}
 
 function handleCommandValidation(exception: CommandValidationException) {
   const { mappedErrors } = exception;
   const { message } = exception;
 
   return { message: { message, cause: mappedErrors }, status: HttpStatus.BAD_REQUEST };
+}
+class MongoServerError {
+  code: number; // Error code indicating the type of error
+  errmsg: string; // Human-readable error message
+  ok: number; // Status code (1 for success, 0 for failure)
+  writeErrors?: {
+    index: number; // The index of the operation that failed
+    code: number; // Error code for the write error
+    errmsg: string; // Error message for the write error
+    op: any; // The operation that caused the error
+  }[]; // Array of write errors if applicable
+  operationTime?: string; // Time at which the operation was executed
+  clusterTime?: string; // Time at which the operation was executed in the cluster
 }

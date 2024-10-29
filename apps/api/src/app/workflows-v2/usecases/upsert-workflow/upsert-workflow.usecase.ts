@@ -200,7 +200,7 @@ export class UpsertWorkflowUseCase {
       __source: workflowDto.__source || WorkflowCreationSourceEnum.DASHBOARD,
       type: WorkflowTypeEnum.BRIDGE,
       origin: WorkflowOriginEnum.NOVU_CLOUD,
-      steps: this.mapSteps(workflowDto.steps),
+      steps: this.mapStepsForUpdate(workflowDto.steps),
       payloadSchema: {},
       active: isWorkflowActive,
       description: workflowDto.description || '',
@@ -223,7 +223,7 @@ export class UpsertWorkflowUseCase {
       organizationId: user.organizationId,
       userId: user._id,
       name: command.workflowDto.name,
-      steps: this.mapSteps(workflowDto.steps, existingWorkflow),
+      steps: this.mapStepsForUpdate(workflowDto.steps, existingWorkflow),
       rawData: workflowDto,
       type: WorkflowTypeEnum.BRIDGE,
       description: workflowDto.description,
@@ -233,14 +233,19 @@ export class UpsertWorkflowUseCase {
     };
   }
 
-  private mapSteps(
+  private mapStepsForUpdate(
     commandWorkflowSteps: Array<StepCreateDto | StepUpdateDto>,
     persistedWorkflow?: NotificationTemplateEntity | undefined
   ): NotificationStep[] {
     const steps: NotificationStep[] = commandWorkflowSteps.map((step) => {
       return this.mapSingleStep(persistedWorkflow, step);
     });
+    this.assertNoDuplicateIds(steps);
 
+    return steps;
+  }
+
+  private assertNoDuplicateIds(steps: NotificationStep[]) {
     const seenStepIds = new Set();
     const duplicateStepIds = new Set();
 
@@ -255,8 +260,6 @@ export class UpsertWorkflowUseCase {
     if (duplicateStepIds.size > 0) {
       throw new BadRequestException(`Duplicate stepIds are not allowed: ${Array.from(duplicateStepIds).join(', ')}`);
     }
-
-    return steps;
   }
 
   private mapSingleStep(
