@@ -166,15 +166,15 @@ function handleCommandValidation(exception: CommandValidationException) {
   return { message: { message, cause: mappedErrors }, status: HttpStatus.BAD_REQUEST };
 }
 class MongoServerError {
-  code: number; // Error code indicating the type of error
-  errmsg: string; // Human-readable error message
-  ok: number; // Status code (1 for success, 0 for failure)
+  code: number;
+  errmsg: string;
+  ok: number;
   writeErrors?: {
-    index: number; // The index of the operation that failed
-    code: number; // Error code for the write error
-    errmsg: string; // Error message for the write error
-    op: any; // The operation that caused the error
-  }[]; // Array of write errors if applicable
-  operationTime?: string; // Time at which the operation was executed
-  clusterTime?: string; // Time at which the operation was executed in the cluster
+    index: number;
+    code: number;
+    errmsg: string;
+    op: any;
+  }[];
+  operationTime?: string;
+  clusterTime?: string;
 }
