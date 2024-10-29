@@ -25,7 +25,7 @@ import {
 export interface MasterPayload {
   subscriber: Record<string, unknown>;
   payload: Record<string, unknown>;
-  steps: Record<string, unknown>; // step.stepId.unkown
+  steps: Record<string, unknown>; // step.stepId.unknown
 }
 @Injectable()
 export class ConstructFrameworkWorkflow {
