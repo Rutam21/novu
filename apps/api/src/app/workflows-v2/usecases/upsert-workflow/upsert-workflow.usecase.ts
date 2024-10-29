@@ -8,6 +8,7 @@ import {
   PreferencesEntity,
 } from '@novu/dal';
 import {
+  BaseCommand,
   CreateWorkflow as CreateWorkflowGeneric,
   CreateWorkflowCommand,
   GetPreferences,
@@ -56,7 +57,15 @@ function buildUpsertControlValuesCommand(
   });
 }
 
-class ValidateWorkflowUseCase {}
+class ValidateWorkflowCommand extends BaseCommand {
+  workflow: NotificationTemplateEntity;
+  preferences: GetPreferencesResponseDto;
+  stepIdToControlValuesMap: { [p: string]: ControlValuesEntity };
+}
+
+class ValidateWorkflowUseCase {
+  async execute(command: ValidateWorkflowCommand) {}
+}
 
 @Injectable()
 export class UpsertWorkflowUseCase {
@@ -75,7 +84,11 @@ export class UpsertWorkflowUseCase {
     const workflow = await this.createOrUpdateWorkflow(workflowForUpdate, command);
     const stepIdToControlValuesMap = await this.upsertControlValues(workflow, command);
     const preferences = await this.upsertPreference(command, workflow);
-    await this.validateWorkflowUsecase.execute(workflow, preferences, stepIdToControlValuesMap);
+    await this.validateWorkflowUsecase.execute({
+      workflow,
+      preferences,
+      stepIdToControlValuesMap,
+    });
 
     return toResponseWorkflowDto(workflow, preferences, stepIdToControlValuesMap);
   }
