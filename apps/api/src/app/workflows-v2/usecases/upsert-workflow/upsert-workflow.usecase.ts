@@ -56,6 +56,8 @@ function buildUpsertControlValuesCommand(
   });
 }
 
+class ValidateWorkflowUseCase {}
+
 @Injectable()
 export class UpsertWorkflowUseCase {
   constructor(
@@ -64,11 +66,22 @@ export class UpsertWorkflowUseCase {
     private notificationGroupRepository: NotificationGroupRepository,
     private upsertPreferencesUsecase: UpsertPreferences,
     private upsertControlValuesUseCase: UpsertControlValuesUseCase,
+    private validateWorkflowUsecase: ValidateWorkflowUseCase,
     private getWorkflowByIdsUseCase: GetWorkflowByIdsUseCase,
     private getPreferencesUseCase: GetPreferences
   ) {}
   async execute(command: UpsertWorkflowCommand): Promise<WorkflowResponseDto> {
-    const workflowForUpdate: NotificationTemplateEntity | null = command.identifierOrInternalId
+    const workflowForUpdate: NotificationTemplateEntity | null = await this.getPersistedWorkflowToUpdate(command);
+    const workflow = await this.createOrUpdateWorkflow(workflowForUpdate, command);
+    const stepIdToControlValuesMap = await this.upsertControlValues(workflow, command);
+    const preferences = await this.upsertPreference(command, workflow);
+    await this.validateWorkflowUsecase.execute(workflow, preferences, stepIdToControlValuesMap);
+
+    return toResponseWorkflowDto(workflow, preferences, stepIdToControlValuesMap);
+  }
+
+  private async getPersistedWorkflowToUpdate(command: UpsertWorkflowCommand) {
+    return command.identifierOrInternalId
       ? await this.getWorkflowByIdsUseCase.execute(
           GetWorkflowByIdsCommand.create({
             ...command,
@@ -76,11 +89,6 @@ export class UpsertWorkflowUseCase {
           })
         )
       : null;
-    const workflow = await this.createOrUpdateWorkflow(workflowForUpdate, command);
-    const stepIdToControlValuesMap = await this.upsertControlValues(workflow, command);
-    const preferences = await this.upsertPreference(command, workflow);
-
-    return toResponseWorkflowDto(workflow, preferences, stepIdToControlValuesMap);
   }
 
   private async upsertControlValues(workflow: NotificationTemplateEntity, command: UpsertWorkflowCommand) {

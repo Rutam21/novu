@@ -1,5 +1,5 @@
 import { ChannelTypeEnum } from '../../types';
-import { ControlPreviewIssueTypeEnum } from './control-preview-issue-type.enum';
+import { StepContentIssueEnum } from './step-content-issue.enum';
 
 export class RenderOutput {}
 
@@ -55,7 +55,7 @@ export class InAppRenderOutput extends RenderOutput {
 }
 
 export class ControlPreviewIssue {
-  issueType: ControlPreviewIssueTypeEnum;
+  issueType: StepContentIssueEnum;
   variableName?: string;
   message: string;
 }

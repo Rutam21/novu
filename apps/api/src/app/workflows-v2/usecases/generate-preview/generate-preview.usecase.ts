@@ -2,11 +2,11 @@ import { Injectable } from '@nestjs/common';
 import {
   ChannelTypeEnum,
   ControlPreviewIssue,
-  ControlPreviewIssueTypeEnum,
   ControlsSchema,
   GeneratePreviewRequestDto,
   GeneratePreviewResponseDto,
   JSONSchemaDto,
+  StepContentIssueEnum,
   StepTypeEnum,
   WorkflowOriginEnum,
 } from '@novu/shared';
@@ -75,7 +75,7 @@ export class GeneratePreviewUsecase {
     keys.forEach((key) => {
       record[key] = [
         {
-          issueType: ControlPreviewIssueTypeEnum.MISSING_VALUE,
+          issueType: StepContentIssueEnum.MISSING_VALUE,
           message: `Value is missing on a required control`, // Custom message for the issue
         },
       ];
@@ -194,7 +194,7 @@ export class GeneratePreviewUsecase {
       variableToControlValueKeys[missingVariable].forEach((controlValueKey) => {
         record[controlValueKey] = [
           {
-            issueType: ControlPreviewIssueTypeEnum.MISSING_VARIABLE_IN_PAYLOAD, // Set issueType to MISSING_VALUE
+            issueType: StepContentIssueEnum.MISSING_VARIABLE_IN_PAYLOAD, // Set issueType to MISSING_VALUE
             message: `Variable payload.${missingVariable} is missing in payload`, // Custom message for the issue
             variableName: `payload.${missingVariable}`,
           },
