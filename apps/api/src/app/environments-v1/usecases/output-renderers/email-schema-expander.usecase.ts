@@ -46,7 +46,7 @@ export class ExpandEmailEditorSchemaUsecase {
     return !!(node.attrs && 'show' in node.attrs);
   }
 
-  private regularExpension(eachObject: any, templateContent: TipTapNode[]): TipTapNode[] {
+  private regularExpansion(eachObject: any, templateContent: TipTapNode[]): TipTapNode[] {
     const expandedContent: TipTapNode[] = [];
     const jsonArrOfValues = eachObject as unknown as [{ [key: string]: string }];
 
@@ -71,13 +71,13 @@ export class ExpandEmailEditorSchemaUsecase {
     const templateContent = node.content || [];
 
     if (this.isOrderedList(templateContent) && templateContent[0].content) {
-      return [{ ...templateContent[0], content: this.regularExpension(eachObject, templateContent[0].content) }];
+      return [{ ...templateContent[0], content: this.regularExpansion(eachObject, templateContent[0].content) }];
     }
     if (this.isBulletList(templateContent) && templateContent[0].content) {
-      return [{ ...templateContent[0], content: this.regularExpension(eachObject, templateContent[0].content) }];
+      return [{ ...templateContent[0], content: this.regularExpansion(eachObject, templateContent[0].content) }];
     }
 
-    return this.regularExpension(eachObject, templateContent);
+    return this.regularExpansion(eachObject, templateContent);
   }
 
   private removeNodeFromParent(node: TipTapNode, parentNode?: TipTapNode) {
