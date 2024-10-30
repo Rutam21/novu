@@ -21,14 +21,14 @@ import {
   GetListQueryParams,
   IdentifierOrInternalId,
   ListWorkflowResponse,
+  PromoteWorkflowDto,
+  StepMetadataDto,
   UpdateWorkflowDto,
   UserSessionData,
   WorkflowResponseDto,
   WorkflowTestDataResponseDto,
-  PromoteWorkflowDto,
 } from '@novu/shared';
-import { UserAuthGuard, UserSession } from '@novu/application-generic';
-
+import { ExternalApiAccessible, UserAuthGuard, UserSession } from '@novu/application-generic';
 import { ApiCommonResponses } from '../shared/framework/response.decorator';
 import { UserAuthentication } from '../shared/framework/swagger/api.key.security';
 import { GetWorkflowCommand } from './usecases/get-workflow/get-workflow.command';
@@ -47,6 +47,8 @@ import { ParseSlugIdPipe } from './pipes/parse-slug-id.pipe';
 import { ParseSlugEnvironmentIdPipe } from './pipes/parse-slug-env-id.pipe';
 import { WorkflowTestDataUseCase } from './usecases/test-data/test-data.usecase';
 import { WorkflowTestDataCommand } from './usecases/test-data/test-data.command';
+import { GetStepSchemaCommand } from './usecases/get-step-schema/get-step-schema.command';
+import { GetStepMetadataUseCase } from './usecases/get-step-schema/get-step-metadata-use-case.service';
 
 @ApiCommonResponses()
 @Controller({ path: `/workflows`, version: '2' })
@@ -61,7 +63,8 @@ export class WorkflowController {
     private deleteWorkflowUsecase: DeleteWorkflowUseCase,
     private syncToEnvironmentUseCase: SyncToEnvironmentUseCase,
     private generatePreviewUseCase: GeneratePreviewUsecase,
-    private workflowTestDataUseCase: WorkflowTestDataUseCase
+    private workflowTestDataUseCase: WorkflowTestDataUseCase,
+    private getStepMetadata: GetStepMetadataUseCase
   ) {}
 
   @Post('')
@@ -161,6 +164,23 @@ export class WorkflowController {
     );
   }
 
+  @Get('/:workflowId/step/:stepUuid/metadata')
+  @ExternalApiAccessible()
+  async getWorkflowStepMetadata(
+    @UserSession(ParseSlugEnvironmentIdPipe) user: UserSessionData,
+    @Param('workflowId', ParseSlugIdPipe) workflowId: IdentifierOrInternalId,
+    @Param('stepId', ParseSlugIdPipe) stepId: string
+  ): Promise<StepMetadataDto> {
+    return await this.getStepMetadata.execute(
+      GetStepSchemaCommand.create({
+        organizationId: user.organizationId,
+        environmentId: user.environmentId,
+        userId: user._id,
+        workflowId,
+        stepId,
+      })
+    );
+  }
   @Get('/:workflowId/test-data')
   @UseGuards(UserAuthGuard)
   async getWorkflowTestData(

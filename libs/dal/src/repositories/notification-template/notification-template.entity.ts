@@ -16,6 +16,7 @@ import {
   IWorkflowStepMetadata,
   NotificationTemplateCustomData,
   TriggerTypeEnum,
+  UiSchema,
   WorkflowOriginEnum,
   WorkflowTypeEnum,
 } from '@novu/shared';
@@ -142,6 +143,7 @@ export class StepVariantEntity implements IStepVariant {
 
   controls?: {
     schema: JSONSchema;
+    uiSchema?: UiSchema;
   };
 }
 

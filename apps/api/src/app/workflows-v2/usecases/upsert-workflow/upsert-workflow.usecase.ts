@@ -25,6 +25,7 @@ import {
 import {
   CreateWorkflowDto,
   DEFAULT_WORKFLOW_PREFERENCES,
+  slugify,
   StepCreateDto,
   StepDto,
   StepUpdateDto,
@@ -33,14 +34,13 @@ import {
   WorkflowPreferences,
   WorkflowResponseDto,
   WorkflowTypeEnum,
-  slugify,
 } from '@novu/shared';
 import { UpsertWorkflowCommand } from './upsert-workflow.command';
 import { StepUpsertMechanismFailedMissingIdException } from '../../exceptions/step-upsert-mechanism-failed-missing-id.exception';
 import { toResponseWorkflowDto } from '../../mappers/notification-template-mapper';
 import { GetWorkflowByIdsUseCase } from '../get-workflow-by-ids/get-workflow-by-ids.usecase';
 import { GetWorkflowByIdsCommand } from '../get-workflow-by-ids/get-workflow-by-ids.command';
-import { mapStepTypeToControlSchema } from '../../../step-schemas/shared';
+import { mapStepTypeToControlSchema } from '../../shared';
 
 function buildUpsertControlValuesCommand(
   command: UpsertWorkflowCommand,

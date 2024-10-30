@@ -3,16 +3,16 @@ import { JSONSchema } from 'json-schema-to-ts';
 import type {
   BuilderFieldType,
   BuilderGroupValues,
-  TemplateVariableTypeEnum,
   FilterParts,
-  WorkflowTypeEnum,
   NotificationTemplateCustomData,
+  TemplateVariableTypeEnum,
+  WorkflowTypeEnum,
 } from '../../types';
 import { IMessageTemplate } from '../message-template';
 import { IPreferenceChannels } from '../subscriber-preference';
 import { IWorkflowStepMetadata } from '../step';
 import { INotificationGroup } from '../notification-group';
-import { ControlsDto } from '../../dto';
+import { ControlsDto, UiSchema } from '../../dto';
 
 export interface INotificationTemplate {
   _id?: string;
@@ -104,6 +104,7 @@ export interface IStepVariant {
   };
   controls?: {
     schema: JSONSchema;
+    uiSchema?: UiSchema;
   };
   /*
    * controlVariables exists
@@ -112,7 +113,10 @@ export interface IStepVariant {
   controlVariables?: ControlsDto;
   bridgeUrl?: string;
 }
-
+export class Controls {
+  dataSchema?: JSONSchema;
+  uiSchema?: UiSchema;
+}
 export interface INotificationTemplateStep extends IStepVariant {
   variants?: IStepVariant[];
 }

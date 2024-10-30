@@ -208,7 +208,7 @@ function mailyJsonExample(): TipTapNode {
 function buildEmailControlValuesPayload(): EmailStepControlSchemaDto {
   return {
     subject: `Hello, World! ${SUBJECT_TEST_PAYLOAD}`,
-    emailEditor: mailyJsonExample(),
+    emailEditor: JSON.stringify(mailyJsonExample()),
   };
 }
 function buildInAppControlValues(): InAppOutput {
