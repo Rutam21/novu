@@ -50,7 +50,7 @@ export const InAppEditor = () => {
           size="xs"
           className="size-6"
           onClick={() => {
-            navigate('.', { relative: 'path' });
+            navigate('../', { relative: 'path' });
           }}
         >
           <Cross2Icon className="h-4 w-4" />
