@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 import {
   BuilderFieldType,
   BuilderGroupValues,
+  ControlPreviewIssue,
   ControlsDto,
   FilterParts,
   IMessageFilter,
@@ -15,6 +16,7 @@ import {
   ITriggerReservedVariable,
   IWorkflowStepMetadata,
   NotificationTemplateCustomData,
+  StepIssue,
   TriggerTypeEnum,
   WorkflowOriginEnum,
   WorkflowTypeEnum,
@@ -82,6 +84,8 @@ export class NotificationTemplateEntity implements INotificationTemplate {
   rawData?: any;
 
   payloadSchema?: any;
+
+  issues: Record<string, ControlPreviewIssue[]>;
 }
 
 export type NotificationTemplateDBModel = ChangePropsValueType<
@@ -103,12 +107,18 @@ export class NotificationTriggerEntity implements INotificationTrigger {
   reservedVariables?: ITriggerReservedVariable[];
 }
 
+export class StepIssues {
+  body: Record<string, StepIssue>;
+  controls: Record<string, ControlPreviewIssue[]>;
+}
 export class StepVariantEntity implements IStepVariant {
   _id?: string;
 
   uuid?: string;
 
   stepId?: string;
+
+  issues: StepIssues;
 
   name?: string;
 

@@ -24,6 +24,7 @@ import { CreateMockPayloadUseCase } from './usecases/placeholder-enrichment/payl
 import { ExtractDefaultsUsecase } from './usecases/get-default-values-from-schema/extract-defaults.usecase';
 import { CollectPlaceholdersFromTipTapSchemaUsecase } from './usecases/placeholder-enrichment/collect-placeholders-from-tip-tap-schema.usecase';
 import { TransformPlaceholderMapUseCase } from './usecases/placeholder-enrichment/transform-placeholder.usecase';
+import { ValidateControlValuesAndAddDefaultsUseCase } from './usecases/validate-control-values/validate-control-values-and-add-defaults.usecase';
 
 @Module({
   imports: [SharedModule, MessageTemplateModule, ChangeModule, AuthModule, BridgeModule, IntegrationModule],
@@ -47,6 +48,7 @@ import { TransformPlaceholderMapUseCase } from './usecases/placeholder-enrichmen
     ExtractDefaultsUsecase,
     CollectPlaceholdersFromTipTapSchemaUsecase,
     TransformPlaceholderMapUseCase,
+    ValidateControlValuesAndAddDefaultsUseCase,
   ],
 })
 export class WorkflowModule implements NestModule {

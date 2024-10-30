@@ -1,5 +1,5 @@
 import { ChannelTypeEnum } from '../../types';
-import { StepContentIssueEnum } from './step-content-issue.enum';
+import { ControlPreviewIssue } from '../workflows';
 
 export class RenderOutput {}
 
@@ -52,12 +52,6 @@ export class InAppRenderOutput extends RenderOutput {
     url: string;
     target?: RedirectTargetEnum;
   };
-}
-
-export class ControlPreviewIssue {
-  issueType: StepContentIssueEnum;
-  variableName?: string;
-  message: string;
 }
 
 export class GeneratePreviewResponseDto {

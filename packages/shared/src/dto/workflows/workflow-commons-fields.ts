@@ -3,18 +3,36 @@ import { IsArray, IsBoolean, IsDefined, IsObject, IsOptional, IsString } from 'c
 import { JSONSchema } from 'json-schema-to-ts';
 import { WorkflowResponseDto } from './workflow-response-dto';
 import { Slug, StepTypeEnum, WorkflowPreferences } from '../../types';
+import { StepContentIssueEnum } from '../step-schemas';
+import { StepIssueEnum } from '../step-schemas/step-content-issue.enum';
 
 export type IdentifierOrInternalId = string;
 
 export class ControlsSchema {
   schema: JSONSchema;
 }
+export type StepCreateAndUpdateKeys = keyof StepCreateDto | keyof StepUpdateDto;
 
+export class StepIssuesDto {
+  body?: Record<StepCreateAndUpdateKeys, StepIssue>;
+  controls?: Record<string, ControlPreviewIssue[]>;
+}
+export class ControlPreviewIssue {
+  issueType: StepContentIssueEnum;
+  variableName?: string;
+  message: string;
+}
+export class StepIssue {
+  issueType: StepIssueEnum;
+  variableName?: string;
+  message: string;
+}
 export type StepResponseDto = StepDto & {
   _id: string;
   slug: Slug;
   stepId: string;
   controls: ControlsSchema;
+  issues: StepIssuesDto;
 };
 
 export type StepUpdateDto = StepDto & {
@@ -58,8 +76,6 @@ export class WorkflowCommonsFields {
   @IsBoolean()
   active?: boolean;
 
-  @IsString()
-  @IsDefined()
   name: string;
 
   @IsString()
