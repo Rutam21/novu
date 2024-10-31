@@ -46,7 +46,7 @@ function buildUpsertControlValuesCommand(
   command: UpsertWorkflowCommand,
   persistedStep: NotificationStepEntity,
   persistedWorkflow: NotificationTemplateEntity,
-  stepInDto: StepDto
+  stepInDto: StepUpdateDto | StepCreateDto
 ): UpsertControlValuesCommand {
   return UpsertControlValuesCommand.create({
     organizationId: command.user.organizationId,
@@ -78,10 +78,10 @@ export class UpsertWorkflowUseCase {
         )
       : null;
     const workflow = await this.createOrUpdateWorkflow(workflowForUpdate, command);
-    const stepIdToControlValuesMap = await this.upsertControlValues(workflow, command);
+    await this.upsertControlValues(workflow, command);
     const preferences = await this.upsertPreference(command, workflow);
 
-    return toResponseWorkflowDto(workflow, preferences, stepIdToControlValuesMap);
+    return toResponseWorkflowDto(workflow, preferences);
   }
 
   private async upsertControlValues(workflow: NotificationTemplateEntity, command: UpsertWorkflowCommand) {
@@ -274,7 +274,7 @@ export class UpsertWorkflowUseCase {
 
   private mapSingleStep(
     persistedWorkflow: NotificationTemplateEntity | undefined,
-    step: StepDto | (StepDto & { stepUuid: string })
+    step: StepUpdateDto | StepCreateDto
   ): NotificationStep {
     const foundPersistedStep = this.getPersistedStepIfFound(persistedWorkflow, step);
     const stepEntityToReturn = this.buildBaseStepEntity(step, foundPersistedStep);

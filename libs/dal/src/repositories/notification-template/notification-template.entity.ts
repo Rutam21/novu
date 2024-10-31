@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 import {
   BuilderFieldType,
   BuilderGroupValues,
+  ControlSchemas,
   ControlsDto,
   FilterParts,
   IMessageFilter,
@@ -16,12 +17,9 @@ import {
   IWorkflowStepMetadata,
   NotificationTemplateCustomData,
   TriggerTypeEnum,
-  UiSchema,
   WorkflowOriginEnum,
   WorkflowTypeEnum,
 } from '@novu/shared';
-
-import { JSONSchema } from 'json-schema-to-ts';
 import { NotificationGroupEntity } from '../notification-group';
 import type { OrganizationId } from '../organization';
 import type { EnvironmentId } from '../environment';
@@ -141,12 +139,8 @@ export class StepVariantEntity implements IStepVariant {
    */
   controlVariables?: ControlsDto;
 
-  controls?: {
-    schema: JSONSchema;
-    uiSchema?: UiSchema;
-  };
+  controls?: ControlSchemas;
 }
-
 export class NotificationStepEntity extends StepVariantEntity implements INotificationTemplateStep {
   variants?: StepVariantEntity[];
 }

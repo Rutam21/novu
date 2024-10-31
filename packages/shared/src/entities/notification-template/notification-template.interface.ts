@@ -12,7 +12,8 @@ import { IMessageTemplate } from '../message-template';
 import { IPreferenceChannels } from '../subscriber-preference';
 import { IWorkflowStepMetadata } from '../step';
 import { INotificationGroup } from '../notification-group';
-import { ControlsDto, UiSchema } from '../../dto';
+import { UiSchema } from '../../dto';
+import { ControlsDto } from '../../index';
 
 export interface INotificationTemplate {
   _id?: string;
@@ -102,10 +103,7 @@ export interface IStepVariant {
   inputs?: {
     schema: JSONSchema;
   };
-  controls?: {
-    schema: JSONSchema;
-    uiSchema?: UiSchema;
-  };
+  controls?: ControlSchemas;
   /*
    * controlVariables exists
    * only on none production environment in order to provide stateless control variables on fly
@@ -113,6 +111,11 @@ export interface IStepVariant {
   controlVariables?: ControlsDto;
   bridgeUrl?: string;
 }
+export class ControlSchemas {
+  schema: JSONSchema;
+  uiSchema?: UiSchema;
+}
+
 export class Controls {
   dataSchema?: JSONSchema;
   uiSchema?: UiSchema;
