@@ -6,25 +6,26 @@ import {
   DEFAULT_WORKFLOW_PREFERENCES,
   isStepUpdateBody,
   ListWorkflowResponse,
+  ShortIsPrefixEnum,
+  slugify,
   StepCreateDto,
   StepDto,
   StepResponseDto,
   StepTypeEnum,
   StepUpdateDto,
   UpdateStepBody,
+  UpdateWorkflowDto,
   UpsertStepBody,
   UpsertWorkflowBody,
-  UpdateWorkflowDto,
   WorkflowCommonsFields,
   WorkflowCreationSourceEnum,
   WorkflowListResponseDto,
   WorkflowResponseDto,
-  ShortIsPrefixEnum,
-  slugify,
 } from '@novu/shared';
 import { createWorkflowClient } from './clients';
 
 import { encodeBase62 } from '../shared/helpers';
+import { updateWorkflowDtoSchema } from './shared/schemas/workflow-zod-schemas';
 
 const v2Prefix = '/v2';
 const PARTIAL_UPDATED_NAME = 'Updated';
@@ -85,14 +86,34 @@ describe('Workflow Controller E2E API Testing', () => {
     });
   });
 
+  async function getControlValuesForStep(workflowId: string, stepId: string) {
+    const workflowStepMetadataRestResult = await workflowsClient.getWorkflowStepMetadata(workflowId, stepId);
+    expect(workflowStepMetadataRestResult.isSuccess).to.be.true;
+    if (!workflowStepMetadataRestResult.isSuccessResult()) {
+      throw new Error(workflowStepMetadataRestResult.error!.responseText);
+    }
+
+    return workflowStepMetadataRestResult.value.controls.values;
+  }
+
   describe('Update Workflow Permutations', () => {
     it('should update control values', async () => {
       const nameSuffix = `Test Workflow${new Date().toString()}`;
       const workflowCreated: WorkflowResponseDto = await createWorkflowAndValidate(nameSuffix);
-      const updateDtoWithValues = buildUpdateDtoWithValues(workflowCreated);
+      const updateRequest = updateWorkflowDtoSchema.parse(workflowCreated);
+      for (const step of updateRequest.steps) {
+        if (isStepUpdateBody(step)) {
+          step.controlValues = { test: randomBytes(10).toString('hex') };
+        }
+      }
+      const updateDtoWithValues = buildUpdateDto(workflowCreated);
       const updatedWorkflow: WorkflowResponseDto = await updateWorkflowRest(workflowCreated._id, updateDtoWithValues);
-      expect(updatedWorkflow.steps[0].controlValues.test).to.be.equal(updateDtoWithValues.steps[0].controlValues.test);
-      expect(updatedWorkflow.steps[1].controlValues.test).to.be.equal(updateDtoWithValues.steps[1].controlValues.test);
+      expect(updateRequest.steps[0].controlValues.test).to.be.equal(
+        (await getControlValuesForStep(updatedWorkflow._id, updatedWorkflow.steps[0]._id)).test
+      );
+      expect(updateRequest.steps[1].controlValues.test).to.be.equal(
+        (await getControlValuesForStep(updatedWorkflow._id, updatedWorkflow.steps[1]._id)).test
+      );
     });
 
     it('should keep the step id on updated ', async () => {
@@ -132,7 +153,7 @@ describe('Workflow Controller E2E API Testing', () => {
     it('should update by slugify ids', async () => {
       const nameSuffix = `Test Workflow${new Date().toString()}`;
       const workflowCreated: WorkflowResponseDto = await createWorkflowAndValidate(nameSuffix);
-      const updateDtoWithValues = buildUpdateDtoWithValues(workflowCreated);
+      const updateDtoWithValues = buildUpdateDto(workflowCreated);
 
       const internalId = workflowCreated._id;
       await updateWorkflowAndValidate(internalId, workflowCreated.updatedAt, updateDtoWithValues, internalId);
@@ -412,7 +433,7 @@ async function createWorkflowAndValidate(nameSuffix: string = ''): Promise<Workf
     'slug'
   );
   createdWorkflowWithoutUpdateDate.steps = createdWorkflowWithoutUpdateDate.steps.map((step) =>
-    removeFields(step, '_id', 'slug', 'slug', 'controls', 'stepId')
+    removeFields(step, '_id', 'slug', 'slug', 'stepId')
   );
   expect(createdWorkflowWithoutUpdateDate).to.deep.equal(
     removeFields(createWorkflowDto, '__source')
@@ -424,7 +445,6 @@ async function createWorkflowAndValidate(nameSuffix: string = ''): Promise<Workf
 
 function buildEmailStep(): StepDto {
   return {
-    controlValues: {},
     name: 'Email Test Step',
     type: StepTypeEnum.EMAIL,
   };
@@ -432,7 +452,6 @@ function buildEmailStep(): StepDto {
 
 function buildInAppStep(): StepDto {
   return {
-    controlValues: {},
     name: 'In-App Test Step',
     type: StepTypeEnum.IN_APP,
   };
@@ -469,17 +488,7 @@ function isStepUpdateDto(obj: StepCreateDto | StepUpdateDto): obj is StepUpdateD
 }
 
 function buildStepWithoutUUid(stepInResponse: StepResponseDto) {
-  if (!stepInResponse.controls) {
-    return {
-      controlValues: stepInResponse.controlValues,
-      name: stepInResponse.name,
-      type: stepInResponse.type,
-    };
-  }
-
   return {
-    controlValues: stepInResponse.controlValues,
-    controls: stepInResponse.controls,
     name: stepInResponse.name,
     type: stepInResponse.type,
   };
@@ -500,7 +509,7 @@ function findStepOnRequestBasedOnId(workflowUpdateRequest: UpsertWorkflowBody, s
  * We need to make a design decision on the client side, should we allow users to update the stepId separately.
  */
 function updateStepId(step: StepResponseDto): Partial<StepResponseDto> {
-  const { controls, ...rest } = step;
+  const { ...rest } = step;
 
   return {
     ...rest,
@@ -524,16 +533,15 @@ function validateUpdatedWorkflowAndRemoveResponseFields(
   );
   const augmentedSteps: UpsertStepBody[] = [];
   for (const stepInResponse of workflowResponse.steps) {
-    const responseStep = removeFields(stepInResponse, 'controls');
     expect(stepInResponse._id).to.be.ok;
 
-    const { _id } = responseStep;
+    const { _id } = stepInResponse;
     const stepOnRequestBasedOnId = findStepOnRequestBasedOnId(workflowUpdateRequest, _id);
     let augmentedStep: StepUpdateDto | StepCreateDto;
     if (!stepOnRequestBasedOnId) {
-      augmentedStep = buildStepWithoutUUid(responseStep);
+      augmentedStep = buildStepWithoutUUid(stepInResponse);
     } else {
-      augmentedStep = responseStep;
+      augmentedStep = stepInResponse;
     }
     augmentedSteps.push(augmentedStep);
   }
@@ -778,13 +786,6 @@ function addValueToExistingStep(steps: UpsertStepBody[]): UpdateStepBody {
   throw new Error('Step to update is not a StepUpdateDto');
 }
 
-function buildInAppStepWithValues() {
-  const stepDto = buildInAppStep();
-  stepDto.controlValues = { testNew: [`testNew -${generateUUID()}`] };
-
-  return stepDto;
-}
-
 function convertResponseToUpdateDto(workflowCreated: WorkflowResponseDto): UpsertWorkflowBody {
   const workflowWithoutResponseFields = removeFields(workflowCreated, 'updatedAt', '_id', 'origin', 'status');
   const steps: UpsertStepBody[] = workflowWithoutResponseFields.steps.map((step) => removeFields(step, 'stepId'));
@@ -792,10 +793,10 @@ function convertResponseToUpdateDto(workflowCreated: WorkflowResponseDto): Upser
   return { ...workflowWithoutResponseFields, steps };
 }
 
-function buildUpdateDtoWithValues(workflowCreated: WorkflowResponseDto): UpsertWorkflowBody {
+function buildUpdateDto(workflowCreated: WorkflowResponseDto): UpsertWorkflowBody {
   const updateDto = convertResponseToUpdateDto(workflowCreated);
   const updatedStep = addValueToExistingStep(updateDto.steps);
-  const newStep = buildInAppStepWithValues();
+  const newStep = buildInAppStep();
 
   return {
     ...updateDto,
@@ -808,9 +809,6 @@ function createStep(): StepCreateDto {
   return {
     name: 'someStep',
     type: StepTypeEnum.SMS,
-    controlValues: {
-      text: '{SOME_TEXT_VARIABLE}',
-    },
   };
 }
 

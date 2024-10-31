@@ -61,7 +61,7 @@ export const InAppUiSchema: UiSchema = {
     subject: {
       component: UiComponentEnum.IN_APP_SUBJECT,
     },
-    inAppButtonSettings: {
+    buttonSettings: {
       component: UiComponentEnum.IN_APP_BUTTON_DROPDOWN,
     },
     redirect: {

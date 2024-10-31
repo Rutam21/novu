@@ -13,21 +13,21 @@ export class InAppOutputRendererUsecase {
       subject: inApp.subject,
       body: inApp.body,
       avatar: inApp.avatar,
-      primaryAction: inApp.primaryAction
+      primaryAction: inApp.buttonSettings?.primaryAction
         ? {
-            label: inApp.primaryAction.label,
+            label: inApp.buttonSettings.primaryAction.label,
             redirect: {
-              url: inApp.primaryAction.redirect.url,
-              target: inApp.primaryAction.redirect.target as RedirectTargetEnum,
+              url: inApp.buttonSettings.primaryAction.redirect.url,
+              target: inApp.buttonSettings.primaryAction.redirect.target as RedirectTargetEnum,
             },
           }
         : undefined,
-      secondaryAction: inApp.secondaryAction
+      secondaryAction: inApp.buttonSettings?.secondaryAction
         ? {
-            label: inApp.secondaryAction?.label,
+            label: inApp.buttonSettings.secondaryAction?.label,
             redirect: {
-              url: inApp.secondaryAction?.redirect.url,
-              target: inApp.secondaryAction?.redirect.target as RedirectTargetEnum,
+              url: inApp.buttonSettings.secondaryAction?.redirect.url,
+              target: inApp.buttonSettings.secondaryAction?.redirect.target as RedirectTargetEnum,
             },
           }
         : undefined,
@@ -41,30 +41,34 @@ export class InAppOutputRendererUsecase {
     };
   }
 }
-const RedirectTargetEnumSchema = z.enum(['_self', '_blank', '_parent', '_top', '_unfencedTop']);
+const RedirectTargetEnumSchema = z.enum(['_self', '_blank']); // Example enum, replace with your actual enum
 
 const InAppRenderOutputSchema = z.object({
   subject: z.string().optional(),
   body: z.string(),
   avatar: z.string().optional(),
-  primaryAction: z
+  buttonSettings: z
     .object({
-      label: z.string(),
-      redirect: z.object({
-        url: z.string(),
-        target: RedirectTargetEnumSchema.optional(), // Optional target
-      }),
+      primaryAction: z
+        .object({
+          label: z.string(),
+          redirect: z.object({
+            url: z.string(),
+            target: RedirectTargetEnumSchema.optional(), // Optional target
+          }),
+        })
+        .optional(),
+      secondaryAction: z
+        .object({
+          label: z.string(),
+          redirect: z.object({
+            url: z.string(),
+            target: RedirectTargetEnumSchema.optional(), // Optional target
+          }),
+        })
+        .optional(), // Optional secondary action
     })
-    .optional(),
-  secondaryAction: z
-    .object({
-      label: z.string(),
-      redirect: z.object({
-        url: z.string(),
-        target: RedirectTargetEnumSchema.optional(), // Optional target
-      }),
-    })
-    .optional(), // Optional secondary action
+    .optional(), // Optional button settings
   data: z.record(z.unknown()).optional(), // Optional data
   redirect: z
     .object({

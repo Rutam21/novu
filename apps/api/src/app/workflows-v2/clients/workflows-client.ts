@@ -4,8 +4,11 @@ import {
   GeneratePreviewResponseDto,
   GetListQueryParams,
   ListWorkflowResponse,
+  PromoteWorkflowDto,
+  StepMetadataDto,
   UpdateWorkflowDto,
   WorkflowResponseDto,
+  WorkflowTestDataResponseDto,
 } from '@novu/shared';
 import { createNovuBaseClient, HttpError, NovuRestResult } from './novu-base-client';
 
@@ -26,10 +29,22 @@ export const createWorkflowClient = (baseUrl: string, headers: HeadersInit = {})
     return await baseClient.safePut<WorkflowResponseDto>(`/v2/workflows/${workflowId}`, updateWorkflowDto);
   };
 
+  const promoteWorkflow = async (
+    workflowId: string,
+    promoteWorkflowDto: PromoteWorkflowDto
+  ): Promise<NovuRestResult<WorkflowResponseDto, HttpError>> => {
+    return await baseClient.safePut<WorkflowResponseDto>(`/v2/workflows/${workflowId}/promote`, promoteWorkflowDto);
+  };
+
   const getWorkflow = async (workflowId: string): Promise<NovuRestResult<WorkflowResponseDto, HttpError>> => {
     return await baseClient.safeGet<WorkflowResponseDto>(`/v2/workflows/${workflowId}`);
   };
-
+  const getWorkflowStepMetadata = async (
+    workflowId: string,
+    stepId: string
+  ): Promise<NovuRestResult<StepMetadataDto, HttpError>> => {
+    return await baseClient.safeGet<StepMetadataDto>(`/v2/workflows/${workflowId}/step/${stepId}/metadata`);
+  };
   const deleteWorkflow = async (workflowId: string): Promise<NovuRestResult<void, HttpError>> => {
     return await baseClient.safeDelete(`/v2/workflows/${workflowId}`);
   };
@@ -64,13 +79,22 @@ export const createWorkflowClient = (baseUrl: string, headers: HeadersInit = {})
     );
   };
 
+  const getWorkflowTestData = async (
+    workflowId: string
+  ): Promise<NovuRestResult<WorkflowTestDataResponseDto, HttpError>> => {
+    return await baseClient.safeGet<WorkflowTestDataResponseDto>(`/v2/workflows/${workflowId}/test-data`);
+  };
+
   // Return the methods as an object
   return {
     generatePreview,
     createWorkflow,
     updateWorkflow,
+    promoteWorkflow,
     getWorkflow,
     deleteWorkflow,
     searchWorkflows,
+    getWorkflowTestData,
+    getWorkflowStepMetadata,
   };
 };
